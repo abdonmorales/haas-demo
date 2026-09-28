@@ -15,19 +15,31 @@ export class ApiError extends Error {
 
 type Method = 'GET' | 'POST';
 
-// Every server call goes through here.
-async function api<T>(method: Method, path: string, body?: unknown): Promise<T> {
+/** The GitHub Pages build (`vite build --mode pages`) has no server, so calls go to an in-browser mock. */
+const STATIC_DEMO = import.meta.env.MODE === 'pages';
+
+async function send(method: Method, path: string, body?: unknown): Promise<{ status: number; data: unknown }> {
+  if (STATIC_DEMO) {
+    const { handle } = await import('./mockBackend.ts');
+    return handle(method, path, body);
+  }
   const res = await fetch(path, {
     method,
     credentials: 'same-origin',
     headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
-  if (res.status === 204) return undefined as T;
-  const data: unknown = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const serverMessage = (data as { error?: unknown }).error;
-    throw new ApiError(typeof serverMessage === 'string' ? serverMessage : `Request failed (${res.status})`, res.status);
+  if (res.status === 204) return { status: 204, data: undefined };
+  return { status: res.status, data: await res.json().catch(() => ({})) };
+}
+
+// Every server call goes through here.
+async function api<T>(method: Method, path: string, body?: unknown): Promise<T> {
+  const { status, data } = await send(method, path, body);
+  if (status === 204) return undefined as T;
+  if (status < 200 || status >= 300) {
+    const serverMessage = (data as { error?: unknown } | undefined)?.error;
+    throw new ApiError(typeof serverMessage === 'string' ? serverMessage : `Request failed (${status})`, status);
   }
   return data as T;
 }

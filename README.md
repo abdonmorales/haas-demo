@@ -66,6 +66,21 @@ The `prod` profile turns off embedded MongoDB and connects to `MONGODB_URI`. The
 inside the jar, so the whole app is one deployable at one URL. Keep the URI and
 the key in the host's environment settings, never in the repo.
 
+### Static demo on GitHub Pages
+
+`.github/workflows/pages.yml` runs the backend tests, then publishes the React app to GitHub Pages
+on every push to `master` (or on demand from the Actions tab). Pages can't run Spring Boot or
+MongoDB, so this build (`npm run build:pages`, i.e. `vite build --mode pages`) swaps the HTTP calls
+in `api.ts` for `frontend/src/mockBackend.ts`. That's an in-browser copy of the API with the same routes,
+rules, error messages and seed data, storing everything in the visitor's `localStorage`. Each visitor
+gets their own copy of the data; clear site data to reset it. The normal `npm run build` / jar
+build doesn't include the mock.
+
+One-time setup: **Settings → Pages → Source: GitHub Actions**. The site is public at
+`https://<user>.github.io/<repo>/`, even if the repo is private.
+
+When you change the seed data in `application.yml`, update the matching block in `mockBackend.ts`.
+
 ## Architecture
 
 ```
