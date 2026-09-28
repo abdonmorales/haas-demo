@@ -1,7 +1,7 @@
 // Shapes of the JSON the Spring Boot API returns. Each mirrors a Java record on the server
 // (named in the comment), so a change there should be made here too.
 
-/** `edu.utexas.haas.user.ProjectView` */
+/** `com.example.haas.user.ProjectView` */
 export interface Project {
   projectId: string;
   name: string;
@@ -10,7 +10,7 @@ export interface Project {
   owner: boolean;
 }
 
-/** `edu.utexas.haas.hardware.HardwareView` */
+/** `com.example.haas.hardware.HardwareView` */
 export interface HardwareSet {
   name: string;
   description: string;

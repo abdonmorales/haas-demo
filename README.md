@@ -1,13 +1,10 @@
-# HaaS Demo: Hardware-as-a-Service PoC
+# HaaS Demo: Hardware-as-a-Service
 
 **React + TypeScript** frontend · **Java + Spring Boot** backend · **MongoDB** (two databases)
 
-A demo of the EE 461L HaaS project. It has the three windows from the team's frontend sketch
+A small reference app for sharing lab equipment across projects. It has three windows
 (Login → Project Management → Resource Page), uses simulated users and hardware, and keeps user
 data and hardware data in **two separate MongoDB databases**.
-
-> **Stack note:** React and MongoDB are on the course's recommended stack. The Java + Spring Boot
-> backend is not (the course default is Flask), so it needs your TA's sign-off.
 
 ## Run it
 
@@ -23,8 +20,9 @@ Then open http://localhost:8080.
 - The first run downloads a MongoDB server binary from mongodb.org (about 70 MB) and caches it in `~/.embedmongo`.
 - MongoDB's data files go in `./data/mongo`, so data survives restarts. To reset the demo, stop the app and delete `./data/`.
 
-**Demo accounts:** `tyler`, `alex`, `jordan`, all with the password `Demo#2026!`. Pick one from the
-"User choose" dropdown. `tyler` and `alex` share project `POWDER01`, and `jordan` owns `EDGE42`.
+**Demo accounts:** `ada`, `grace`, `linus`, all with the password `Demo#2026!`. Pick one from the
+"User choose" dropdown. `ada` and `grace` share project `AMPLAB1`, and
+`linus` owns `SENSOR7`. The seed inventory is three sets of lab equipment: `Oscilloscopes`, `Function-Generators` and `Power-Supplies`.
 
 ### Frontend development (hot reload)
 
@@ -65,7 +63,7 @@ SPRING_PROFILES_ACTIVE=prod MONGODB_URI='mongodb+srv://…' HAAS_CRYPTO_KEY='<ba
 ```
 
 The `prod` profile turns off embedded MongoDB and connects to `MONGODB_URI`. The React app is bundled
-inside the jar, so the whole app is one deployable at one URL (rubric item R2-3). Keep the URI and
+inside the jar, so the whole app is one deployable at one URL. Keep the URI and
 the key in the host's environment settings, never in the repo.
 
 ## Architecture
@@ -86,7 +84,7 @@ React+TS (frontend)                      Spring Boot                            
 |---|---|
 | `frontend/src/types.ts` | TypeScript interfaces for every API response. Each mirrors a Java record (`ProjectView`, `HardwareView`); change both together. |
 | `frontend/src/api.ts` | Every HTTP call the UI makes, typed end to end, with `ApiError` carrying the HTTP status. The only file that knows the URLs. |
-| `frontend/src/pages/*.tsx` | The three windows from the sketch |
+| `frontend/src/pages/*.tsx` | The three windows |
 | `frontend/src/components/FormDialog.tsx` | One generic popup component, reused for create-account, change-password and return-hardware. Its `fields` prop types the values `onSubmit` receives. |
 | `config/UsersMongoConfig`, `HardwareMongoConfig` | One `MongoTemplate` per database. The package a repository is in decides which database it uses. Also creates the unique indexes. |
 | `user/` | Accounts and projects (`haas_users`) |
@@ -103,12 +101,12 @@ React+TS (frontend)                      Spring Boot                            
   "passwordHash": "<bcrypt>", "demo": true, "createdAt": ISODate }
 
 // haas_users.projects
-{ "_id": ObjectId, "projectId": "POWDER01", "projectKey": "powder01" /* unique */, "name": "…",
+{ "_id": ObjectId, "projectId": "AMPLAB1", "projectKey": "amplab1" /* unique */, "name": "…",
   "description": "…", "ownerId": "<user _id>", "memberIds": ["<user _id>", …], "createdAt": ISODate }
 
 // haas_hardware.hardware_sets
-{ "_id": "HWSet1", "description": "…", "capacity": 200, "available": 160,
-  "allocations": { "POWDER01": 40 } }      // invariant: available + sum(allocations) == capacity
+{ "_id": "Oscilloscopes", "description": "…", "capacity": 60, "available": 48,
+  "allocations": { "AMPLAB1": 12 } }      // invariant: available + sum(allocations) == capacity
 ```
 
 ## REST API
@@ -129,20 +127,7 @@ React+TS (frontend)                      Spring Boot                            
 
 Every error comes back as `{"error": "..."}` with a 400, 401, 403, 404 or 409 status.
 
-## Mapping to the requirements
-
-| Requirement | Where |
-|---|---|
-| SR2 front end | `frontend/` (React + TypeScript, `strict` mode) |
-| SR3 encrypt user ID and password | `CredentialCipher` (AES-256-GCM user ID + HMAC lookup) and BCrypt passwords in `UserService` |
-| SR4 create or access projects | `ProjectService.create` / `access` |
-| SR5 database for credentials, projects and resources | `haas_users` + `haas_hardware` |
-| R2-1 HW in DB, with an API | `hardware_sets` collection, `HardwareController` |
-| R2-2 no hard-coded data on pages | Every page value comes from the API. Seed data lives in config, not in the pages. |
-| R2-3 hosted at a URL | A single jar with the React app inside. The `prod` profile targets Atlas. |
-| "Safe math" and capacity checking (sketch) | Checked on the client, and the server checks again. See the next section. |
-
-## Design decisions (useful for Midterm 2)
+## Design decisions
 
 - **Atomic checkout without transactions.**
   - Each hardware set's per-project counts (`allocations`) live in the same document as `available`.
@@ -157,9 +142,9 @@ Every error comes back as `{"error": "..."}` with a 400, 401, 403, 404 or 409 st
   - AES-GCM encryption is reversible, so the app can show your user ID back to you. But the same ID encrypts differently every time, so you can't search by it.
   - The HMAC is deterministic, so it works as a unique index for looking up users at login.
 - **The cross-database boundary.**
-  - The hardware database refers to projects by their code (`POWDER01`), not by an internal ID.
+  - The hardware database refers to projects by their code (`AMPLAB1`), not by an internal ID.
   - `HardwareController` is the only class that uses both services: it checks membership first, then updates the hardware.
-  - Project IDs become MongoDB field names (`allocations.POWDER01`), so `HardwareService` rejects any ID containing `.` or `$`, whoever the caller is.
+  - Project IDs become MongoDB field names (`allocations.AMPLAB1`), so `HardwareService` rejects any ID containing `.` or `$`, whoever the caller is.
 - **TypeScript on the frontend.**
   - `tsconfig.json` turns on `strict` and `noUncheckedIndexedAccess`.
   - The build runs `tsc` before `vite build`, so a type error fails `npm run build` and `mvn package`.
@@ -173,15 +158,15 @@ Every error comes back as `{"error": "..."}` with a 400, 401, 403, 404 or 409 st
 - **Known tradeoffs.**
   - One hardware document holds every project's count. That's fine for a handful of sets, but thousands of projects per set would make the documents large.
   - There is no transaction spanning both databases. That's acceptable here because the membership check only reads.
-- **Refactoring candidates.**
+- **Possible improvements.**
   - The validation rules are written twice, in `validation.ts` and in the Java services. The server could publish them instead.
   - `types.ts` is maintained by hand. It could be generated from an OpenAPI spec (e.g. springdoc + openapi-typescript) so the TypeScript and Java types can't drift apart.
   - `ApiException` could be replaced with Spring's `ProblemDetail`.
   - The hand-rolled session auth could be replaced with Spring Security.
 
-## Interpretation notes on the sketch
+## UI notes
 
-- The sketch labels its popup "Checkout Popup", but the popup's text says "Enter compute amount to **return**". In this demo:
+- The check-in popup's text says "Enter compute amount to **return**". In this demo:
   - **Check out** takes its amount from the Request field on the row.
   - **Check in** opens the return popup.
-- "Forgot Pwd" works the way the sketch describes: old password, then the new password twice. That makes it a change-password form. True password recovery would need email, which is outside this demo's scope.
+- "Forgot password" asks for the old password, then the new password twice, so it's a change-password form. True password recovery would need email, which is outside this demo's scope.

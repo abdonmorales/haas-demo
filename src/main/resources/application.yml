@@ -17,9 +17,10 @@ spring:
       accept-float-as-int: false   # reject 2.5 instead of silently truncating it to 2
 
 haas:
-  # Two separate MongoDB databases on the same server, as required by the architecture:
-  #   users    -> user accounts + projects  (User Information)
-  #   hardware -> hardware sets + per-project checkouts (Resource Information)
+  # Two separate MongoDB databases on the same server, so account data and inventory data
+  # can be scaled, backed up and secured independently:
+  #   users    -> user accounts + projects
+  #   hardware -> hardware sets + per-project checkouts
   mongo:
     users-database: ${USERS_DB_NAME:haas_users}
     hardware-database: ${HARDWARE_DB_NAME:haas_hardware}
@@ -35,33 +36,33 @@ haas:
   # Simulated data, loaded only when the corresponding database is empty.
   seed:
     demo-password: "Demo#2026!"
-    users: [tyler, alex, jordan]
+    users: [ada, grace, linus]
     projects:
-      - project-id: POWDER01
-        name: POWDER Radio Testbed
-        description: Over-the-air experiments on the simulated POWDER-style testbed.
-        members: [tyler, alex]
-      - project-id: EDGE42
-        name: Edge Compute Benchmarks
-        description: Throughput benchmarks for edge compute nodes.
-        members: [jordan]
+      - project-id: AMPLAB1
+        name: Audio Amplifier Build
+        description: Designs and characterizes a Class-AB audio amplifier.
+        members: [ada, grace]
+      - project-id: SENSOR7
+        name: Sensor Calibration Rig
+        description: Calibrates temperature and strain sensors against reference instruments.
+        members: [linus]
     hardware:
-      - name: HWSet1
-        description: Software-defined radio kits
-        capacity: 200
-      - name: HWSet2
-        description: Edge compute nodes
-        capacity: 100
-      - name: HWSet3
-        description: GPU compute units
-        capacity: 50
+      - name: Oscilloscopes
+        description: 4-channel 200 MHz digital oscilloscopes
+        capacity: 60
+      - name: Function-Generators
+        description: Dual-channel arbitrary function generators
+        capacity: 40
+      - name: Power-Supplies
+        description: Triple-output programmable bench power supplies
+        capacity: 30
     checkouts:
-      - project-id: POWDER01
-        hw-set: HWSet1
-        quantity: 40
-      - project-id: EDGE42
-        hw-set: HWSet2
-        quantity: 25
+      - project-id: AMPLAB1
+        hw-set: Oscilloscopes
+        quantity: 12
+      - project-id: SENSOR7
+        hw-set: Function-Generators
+        quantity: 8
 
 # Embedded MongoDB (Flapdoodle) version, used by the dev and test profiles.
 de.flapdoodle.mongodb.embedded.version: 7.0.14

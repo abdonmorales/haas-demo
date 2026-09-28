@@ -11,11 +11,11 @@
         <relativePath/>
     </parent>
 
-    <groupId>edu.utexas.ece461l</groupId>
+    <groupId>com.example</groupId>
     <artifactId>haas-demo</artifactId>
     <version>0.1.0</version>
     <name>HaaS Demo</name>
-    <description>Hardware-as-a-Service proof of concept (EE 461L demo)</description>
+    <description>Hardware-as-a-Service reference demo (Spring Boot + React + MongoDB)</description>
 
     <properties>
         <java.version>21</java.version>
