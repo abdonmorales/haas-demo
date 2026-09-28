@@ -1,0 +1,5 @@
+# Tests get a fresh, throwaway embedded mongod (no database-dir => temp storage).
+haas:
+  mongo:
+    users-database: haas_users_test
+    hardware-database: haas_hardware_test

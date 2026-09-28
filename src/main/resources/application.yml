@@ -1,0 +1,67 @@
+server:
+  port: ${PORT:8080}
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        http-only: true
+        same-site: strict
+
+spring:
+  application:
+    name: haas-demo
+  profiles:
+    default: dev            # embedded MongoDB; use SPRING_PROFILES_ACTIVE=prod for a real cluster
+  jackson:
+    deserialization:
+      accept-float-as-int: false   # reject 2.5 instead of silently truncating it to 2
+
+haas:
+  # Two separate MongoDB databases on the same server, as required by the architecture:
+  #   users    -> user accounts + projects  (User Information)
+  #   hardware -> hardware sets + per-project checkouts (Resource Information)
+  mongo:
+    users-database: ${USERS_DB_NAME:haas_users}
+    hardware-database: ${HARDWARE_DB_NAME:haas_hardware}
+
+  crypto:
+    # 32-byte base64 master key used to encrypt user IDs (AES-GCM) and derive the
+    # user-ID lookup HMAC. DEMO DEFAULT ONLY - set HAAS_CRYPTO_KEY in any real deploy.
+    master-key: ${HAAS_CRYPTO_KEY:ZGVtby1vbmx5LWtleS1jaGFuZ2UtbWUtMzItYnl0ZXM=}
+
+  demo:
+    user-chooser: true       # populates the "User choose" dropdown on the login page
+
+  # Simulated data, loaded only when the corresponding database is empty.
+  seed:
+    demo-password: "Demo#2026!"
+    users: [tyler, alex, jordan]
+    projects:
+      - project-id: POWDER01
+        name: POWDER Radio Testbed
+        description: Over-the-air experiments on the simulated POWDER-style testbed.
+        members: [tyler, alex]
+      - project-id: EDGE42
+        name: Edge Compute Benchmarks
+        description: Throughput benchmarks for edge compute nodes.
+        members: [jordan]
+    hardware:
+      - name: HWSet1
+        description: Software-defined radio kits
+        capacity: 200
+      - name: HWSet2
+        description: Edge compute nodes
+        capacity: 100
+      - name: HWSet3
+        description: GPU compute units
+        capacity: 50
+    checkouts:
+      - project-id: POWDER01
+        hw-set: HWSet1
+        quantity: 40
+      - project-id: EDGE42
+        hw-set: HWSet2
+        quantity: 25
+
+# Embedded MongoDB (Flapdoodle) version, used by the dev and test profiles.
+de.flapdoodle.mongodb.embedded.version: 7.0.14

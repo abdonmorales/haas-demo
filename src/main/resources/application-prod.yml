@@ -1,0 +1,7 @@
+# Real MongoDB (e.g. Atlas). Provide the connection string via the environment - never commit it.
+spring:
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+  autoconfigure:
+    exclude: de.flapdoodle.embed.mongo.spring.autoconfigure.EmbeddedMongoAutoConfiguration

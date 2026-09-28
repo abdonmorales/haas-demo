@@ -1,0 +1,3 @@
+# Local development: Flapdoodle starts mongod on a free port and keeps its files here,
+# so data survives restarts. Delete ./data to reset the demo.
+de.flapdoodle.mongodb.embedded.database-dir: ${EMBEDDED_MONGO_DIR:./data/mongo}
